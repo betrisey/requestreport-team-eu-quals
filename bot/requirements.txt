@@ -1,0 +1,4 @@
+playwright
+redis==5.0.3
+rq==1.16.1
+requests==2.31.0

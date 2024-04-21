@@ -1,0 +1,14 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+
+  solver:
+    build: .
+    environment:
+      - DOMAIN=192-168-0-90.traefik.me
+      - NGROK_AUTHTOKEN=2F8Q2mNkBuUvQdcpn2D5shKhuPV_7djyMxiqPjQShCmEZx9sU
+    depends_on:
+      - caddy

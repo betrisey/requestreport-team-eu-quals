@@ -1,0 +1,85 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    restart: unless-stopped
+    command:
+      - --log.level=INFO
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.http.redirections.entryPoint
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.file.filename=/etc/traefik/traefik_dynamic.toml
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik_dynamic.toml:/etc/traefik/traefik_dynamic.toml
+      - certs:/certs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  traefik-https-helper:
+    image: alpine
+    command: sh -c "cd /certs
+      && wget https://traefik.me/fullchain.pem -O fullchain.pem
+      && wget https://traefik.me/privkey.pem -O privkey.pem"
+    volumes:
+      - certs:/certs
+
+  redis:
+    image: bitnami/redis:7.2
+    restart: unless-stopped
+    environment:
+      - REDIS_PASSWORD=different-on-remote
+
+  app:
+    build: ./app
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://:different-on-remote@redis:6379
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`${DOMAIN}`) && PathPrefix(`/app`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls=true"
+      - "traefik.http.middlewares.app-stripprefix.stripprefix.prefixes=/app"
+      - "traefik.http.routers.app.middlewares=app-stripprefix"
+  
+  flag:
+    build: ./flag
+    restart: unless-stopped
+    environment:
+      - FLAG=TEC{fake-flag-for-testing}
+      - SECRET=different-on-remote
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flag.rule=Host(`${DOMAIN}`) && PathPrefix(`/flag`)"
+      - "traefik.http.routers.flag.entrypoints=websecure"
+      - "traefik.http.routers.flag.tls=true"
+      - "traefik.http.middlewares.flag-stripprefix.stripprefix.prefixes=/flag"
+      - "traefik.http.routers.flag.middlewares=flag-stripprefix"
+
+  bot:
+    build: ./bot
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - traefik
+    deploy:
+      replicas: 1
+    #network_mode: service:proxy
+    environment:
+      - REDIS_URL=redis://:different-on-remote@redis:6379
+      - COOKIE_URL=https://${DOMAIN}/flag/
+      - SECRET=different-on-remote
+
+volumes:
+  certs:
