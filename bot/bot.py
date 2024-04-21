@@ -4,8 +4,8 @@ from time import sleep
 
 from playwright.sync_api import sync_playwright
 
-SECRET = os.getenv("SECRET")
-COOKIE_URL = os.getenv("COOKIE_URL")
+FLAG = os.getenv("FLAG")
+FLAG_URL = os.getenv("FLAG_URL")
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,12 +22,12 @@ def visit(url: str):
         context = browser.new_context(ignore_https_errors=True, user_agent="AAAAAA")
         context.set_default_timeout(5000)
         context.add_cookies([{
-            "name": "secret",
-            "value": SECRET,
+            "name": "flag",
+            "value": FLAG,
             "secure": True,
             "httpOnly": True,
-            "sameSite": "Lax",
-            "url": COOKIE_URL
+            "sameSite": "Strict",
+            "url": FLAG_URL
         }])
 
         page = context.new_page()

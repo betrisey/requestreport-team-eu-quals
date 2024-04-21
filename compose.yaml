@@ -51,20 +51,6 @@ services:
       - "traefik.http.routers.app.tls=true"
       - "traefik.http.middlewares.app-stripprefix.stripprefix.prefixes=/app"
       - "traefik.http.routers.app.middlewares=app-stripprefix"
-  
-  flag:
-    build: ./flag
-    restart: unless-stopped
-    environment:
-      - FLAG=TEC{fake-flag-for-testing}
-      - SECRET=different-on-remote
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.flag.rule=Host(`${DOMAIN}`) && PathPrefix(`/flag`)"
-      - "traefik.http.routers.flag.entrypoints=websecure"
-      - "traefik.http.routers.flag.tls=true"
-      - "traefik.http.middlewares.flag-stripprefix.stripprefix.prefixes=/flag"
-      - "traefik.http.routers.flag.middlewares=flag-stripprefix"
 
   bot:
     build: ./bot
@@ -78,8 +64,40 @@ services:
     #network_mode: service:proxy
     environment:
       - REDIS_URL=redis://:different-on-remote@redis:6379
-      - COOKIE_URL=https://${DOMAIN}/flag/
-      - SECRET=different-on-remote
+      - FLAG_URL=https://${DOMAIN}/flag/
+      - FLAG=TEC{fake-flag}
+  
+  # requestrepo
+  requestrepodb:
+    image: redis:latest
+    command: redis-server --appendonly yes --maxmemory 1gb --maxclients 1048576
+    restart: unless-stopped
+  requestrepo:
+    build:
+      context: ./requestrepo
+      args:
+        - DOMAIN=${DOMAIN}
+    restart: unless-stopped
+    environment:
+      - JWT_SECRET=changethis
+      - DOMAIN=${DOMAIN}
+      - SERVER_IP=${IP}
+
+      - REDIS_HOST=requestrepodb
+      
+      - TXT=Hello!
+      - INCLUDE_SERVER_DOMAIN=true
+      - SUBDOMAIN_ALPHABET=abcdefghijklmnopqrstuvwxyz0123456789
+      - SUBDOMAIN_LENGTH=8
+    depends_on:
+      - requestrepodb
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.requestrepo.rule=Host(`${DOMAIN}`) && PathPrefix(`/requestrepo`)"
+      - "traefik.http.routers.requestrepo.entrypoints=websecure"
+      - "traefik.http.routers.requestrepo.tls=true"
+      - "traefik.http.middlewares.requestrepo-stripprefix.stripprefix.prefixes=/requestrepo"
+      - "traefik.http.routers.requestrepo.middlewares=requestrepo-stripprefix"
 
 volumes:
   certs:

