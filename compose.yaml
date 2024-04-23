@@ -67,7 +67,6 @@ services:
       - FLAG_URL=https://${DOMAIN}/flag/
       - FLAG=TEC{fake-flag}
   
-  # requestrepo
   requestrepodb:
     image: redis:latest
     command: redis-server --appendonly yes --maxmemory 1gb --maxclients 1048576
