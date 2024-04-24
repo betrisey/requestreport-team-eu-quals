@@ -1,0 +1,38 @@
+version: "3"
+services:
+  redisdb:
+    image: redis:latest
+    command: redis-server --appendonly yes --maxmemory 8gb --maxclients 1048576
+    container_name: redisdb
+    restart: always
+    volumes:
+      - redis_data:/data
+  backend:
+    build: .
+    container_name: backend
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    env_file:
+      - .env
+    depends_on:
+      - redisdb
+    volumes:
+      - pages_data:/app/pages
+  dns:
+    build:
+      context: ./
+      dockerfile: ./dns/Dockerfile
+    container_name: dns
+    restart: always
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    env_file:
+      - .env
+    depends_on:
+      - redisdb
+volumes:
+  redis_data:
+  pages_data:
