@@ -64,7 +64,7 @@ services:
     environment:
       - REDIS_URL=redis://:different-on-remote@redis:6379
       - FLAG_URL=https://${DOMAIN}/flag/
-      - FLAG=TEC{fake-flag}
+      - FLAG=TEC{alt_svc?_more_like_mitm_svc}
   
   requestrepodb:
     image: redis:latest
