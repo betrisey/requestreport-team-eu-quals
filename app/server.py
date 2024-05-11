@@ -2,8 +2,11 @@ import os
 from typing import Annotated
 
 import uvicorn
-from fastapi import FastAPI, Form, Response
+from fastapi import FastAPI, Form, Request, Response
 from fastapi.staticfiles import StaticFiles
+from slowapi.errors import RateLimitExceeded
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
 from redis import Redis
 from rq import Queue
 from Secweb import SecWeb
@@ -13,20 +16,17 @@ REDIS_URL = os.getenv("REDIS_URL")
 bot_queue = Queue(connection=Redis.from_url(REDIS_URL))
 redis: Redis = None
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 SecWeb(app=app)
 
 
-# TODO remove, only for testing
-@app.get("/alt-svc")
-async def alt_svc(host: str, response: Response):
-    response.headers["Alt-Svc"] = f'h2="{host}"; ma=15'
-    return {"success": True}
-
-
 @app.post("/visit")
-async def visit(url: Annotated[str, Form()]):
+@limiter.limit("6/minute")
+async def visit(url: Annotated[str, Form()], request: Request):
     bot_queue.enqueue("bot.visit", url)
     return {"success": True}
 

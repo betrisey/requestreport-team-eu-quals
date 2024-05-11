@@ -1,94 +1,62 @@
-diff --git a/Dockerfile b/Dockerfile
-index ac7dcfd..0d3fc81 100644
---- a/Dockerfile
-+++ b/Dockerfile
-@@ -11,6 +11,10 @@ COPY ./frontend /tmp/frontend
- WORKDIR /tmp/frontend
- 
- RUN npm install --force
-+
-+ARG DOMAIN
-+ENV DOMAIN $DOMAIN
-+
- RUN npm run build
- 
- COPY ./backend/requirements.txt /app/requirements.txt
-diff --git a/frontend/.env b/frontend/.env
-index 161117a..f278245 100644
---- a/frontend/.env
-+++ b/frontend/.env
-@@ -1 +1,2 @@
--DANGEROUSLY_DISABLE_HOST_CHECK=true
+diff --color -r requestrepo-2b15a302e9462404b963fe158c2ec43c58697e05/Dockerfile requestrepo/Dockerfile
+13a14,17
+> 
+> ARG DOMAIN
+> ENV DOMAIN $DOMAIN
+> 
+diff --color -r requestrepo-2b15a302e9462404b963fe158c2ec43c58697e05/frontend/.env requestrepo/frontend/.env
+1c1,2
+< DANGEROUSLY_DISABLE_HOST_CHECK=true
 \ No newline at end of file
-+DANGEROUSLY_DISABLE_HOST_CHECK=true
-+PUBLIC_URL=/requestrepo
+---
+> DANGEROUSLY_DISABLE_HOST_CHECK=true
+> PUBLIC_URL=/requestrepo
 \ No newline at end of file
-diff --git a/frontend/src/app.js b/frontend/src/app.js
-index 74601a5..d42324c 100644
---- a/frontend/src/app.js
-+++ b/frontend/src/app.js
-@@ -65,7 +65,7 @@ class App extends Component {
-       protocol = "wss";
-     }
- 
--    let ws_url = `${protocol}://${document.location.host}/api/ws`;
-+    let ws_url = `${protocol}://${document.location.host}${Utils.apiUrl}/api/ws`;
-     if (
-       (document.location.hostname === "localhost" ||
-         document.location.hostname === "127.0.0.1") &&
-@@ -510,7 +510,7 @@ class App extends Component {
-                       type="text"
-                       placeholder="Your URL"
-                       value={this.state.user.url}
--                      style={{ width: "300px", marginRight: "1em" }}
-+                      style={{ width: "500px", marginRight: "1em" }}
-                       ref={(urlArea) => (this.urlArea = urlArea)}
-                     />
-                     <Button
-diff --git a/frontend/src/components/requests-page.js b/frontend/src/components/requests-page.js
-index ef6d7b2..9766474 100644
---- a/frontend/src/components/requests-page.js
-+++ b/frontend/src/components/requests-page.js
-@@ -15,18 +15,10 @@ export class RequestsPage extends Component {
-             <div className="col-12">
-               <h1>Awaiting requests</h1>
-               <p>How to make a request:</p>
--              <code>curl http://{this.props.user.url}</code>
-+              <code>curl {this.props.user.url}</code>
-               <br />
-               <br />
--              <code>
--                curl http://{this.props.user.domain}/{this.props.user.subdomain}/
--              </code>
--              <br />
--              <br />
--              <code>curl -X POST --data hello http://{this.props.user.url}</code>
--              <br />
--              <br />
--              <code>nslookup your.data.here.{this.props.user.url}</code>
-+              <code>curl -X POST --data hello {this.props.user.url}</code>
-               <br />
-               <br />
-               <code>echo RCE | curl -d @- {this.props.user.url}</code>
-diff --git a/frontend/src/utils.js b/frontend/src/utils.js
-index ef578e8..8c400af 100644
---- a/frontend/src/utils.js
-+++ b/frontend/src/utils.js
-@@ -2,7 +2,7 @@ import axios from "axios";
- 
- export class Utils {
-   static siteUrl = process.env.REACT_APP_DOMAIN || "requestrepo.com";
--  static apiUrl = "";
-+  static apiUrl = "/requestrepo";
-   static requestsEndpoint = "/api/get_requests";
-   static subdomainEndpoint = "/api/get_token";
-   static deleteRequestEndpoint = "/api/delete_request";
-@@ -38,7 +38,7 @@ export class Utils {
-   }
- 
-   static getUserURL() {
--    return this.subdomain + "." + this.siteUrl;
-+    return "https://" + this.siteUrl + this.apiUrl + "/" + this.subdomain;
-   }
- 
-   static userHasSubdomain() {
+diff --color -r requestrepo-2b15a302e9462404b963fe158c2ec43c58697e05/frontend/src/app.js requestrepo/frontend/src/app.js
+68c68
+<     let ws_url = `${protocol}://${document.location.host}/api/ws`;
+---
+>     let ws_url = `${protocol}://${document.location.host}${Utils.apiUrl}/api/ws`;
+497,504d496
+<                     <a href="#/dns-settings">
+<                       <Button
+<                         href="#/dns-settings"
+<                         label="DNS"
+<                         icon="pi pi-home"
+<                         className="p-button-text p-button-secondary"
+<                       />
+<                     </a>
+513c505
+<                       style={{ width: "300px", marginRight: "1em" }}
+---
+>                       style={{ width: "550px", marginRight: "1em" }}
+diff --color -r requestrepo-2b15a302e9462404b963fe158c2ec43c58697e05/frontend/src/components/requests-page.js requestrepo/frontend/src/components/requests-page.js
+18c18
+<               <code>curl http://{this.props.user.url}</code>
+---
+>               <code>curl {this.props.user.url}</code>
+21,29c21
+<               <code>
+<                 curl http://{this.props.user.domain}/{this.props.user.subdomain}/
+<               </code>
+<               <br />
+<               <br />
+<               <code>curl -X POST --data hello http://{this.props.user.url}</code>
+<               <br />
+<               <br />
+<               <code>nslookup your.data.here.{this.props.user.url}</code>
+---
+>               <code>curl -X POST --data hello {this.props.user.url}</code>
+38c30
+<               <p>Check out the Response tab to edit your HTTP Response or the DNS tab to add DNS records for this subdomain.</p>
+---
+>               <p>Check out the Response tab to edit your HTTP Response.</p>
+diff --color -r requestrepo-2b15a302e9462404b963fe158c2ec43c58697e05/frontend/src/utils.js requestrepo/frontend/src/utils.js
+5c5
+<   static apiUrl = "";
+---
+>   static apiUrl = "/requestrepo";
+41c41
+<     return this.subdomain + "." + this.siteUrl;
+---
+>     return "https://" + this.siteUrl + this.apiUrl + "/" + this.subdomain;

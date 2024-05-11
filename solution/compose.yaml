@@ -8,7 +8,7 @@ services:
   solver:
     build: .
     environment:
-      - DOMAIN=192-168-0-90.traefik.me
+      - DOMAIN=requestreport-136-243-41-145.traefik.me
       - NGROK_AUTHTOKEN=2F8Q2mNkBuUvQdcpn2D5shKhuPV_7djyMxiqPjQShCmEZx9sU
     depends_on:
       - caddy

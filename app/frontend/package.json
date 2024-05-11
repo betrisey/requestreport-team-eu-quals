@@ -6,7 +6,8 @@
     "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3"
+    "react-router-dom": "^6.22.3",
+    "react-syntax-highlighter": "^15.5.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
@@ -16,5 +17,6 @@
     "process": "^0.11.10",
     "punycode": "^2.3.1",
     "tailwindcss": "^3.4.3"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

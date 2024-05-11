@@ -1,5 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { vs } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 function Report({ setSession }) {
   const formRef = React.useRef();
@@ -23,9 +25,46 @@ function Report({ setSession }) {
         setResult(response.data.error || "An error occurred");
       }
     } catch (err) {
-      setResult(err.response?.data?.detail || "An error occurred");
+      setResult(err.response?.data?.error || "An error occurred");
     }
   };
+
+  const botCode = `import logging
+import os
+from time import sleep
+
+from playwright.sync_api import sync_playwright
+
+FLAG = os.getenv("FLAG")
+
+logging.basicConfig(level=logging.INFO)
+
+def visit(url: str):
+    if not url.startswith("http://") and not url.startswith("https://"):
+        logging.info(f"Invalid URL: {url}")
+        return
+
+    logging.info(f"Visiting: {url}")
+
+    with sync_playwright() as p:
+        browser = p.firefox.launch(headless=True)
+
+        context = browser.new_context()
+        context.set_default_timeout(5000)
+        context.add_cookies([{
+            "name": "flag",
+            "value": FLAG,
+            "secure": True,
+            "httpOnly": True,
+            "sameSite": "Strict",
+            "url": "${location.origin}/flag/"
+        }])
+
+        page = context.new_page()
+        page.goto(url)
+        sleep(10)
+        browser.close()
+`;
 
   return (
     <div>
@@ -49,6 +88,10 @@ function Report({ setSession }) {
           </button>
           {result && <p>{result}</p>}
         </form>
+        <br />
+        <SyntaxHighlighter language="python" style={vs}>
+          {botCode}
+        </SyntaxHighlighter>
       </div>
     </div>
   );

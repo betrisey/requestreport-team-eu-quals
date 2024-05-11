@@ -60,8 +60,7 @@ services:
       - redis
       - traefik
     deploy:
-      replicas: 1
-    #network_mode: service:proxy
+      replicas: 5
     environment:
       - REDIS_URL=redis://:different-on-remote@redis:6379
       - FLAG_URL=https://${DOMAIN}/flag/

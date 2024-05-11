@@ -19,7 +19,7 @@ def visit(url: str):
     with sync_playwright() as p:
         browser = p.firefox.launch(headless=True)
 
-        context = browser.new_context(ignore_https_errors=True, user_agent="AAAAAA")
+        context = browser.new_context()
         context.set_default_timeout(5000)
         context.add_cookies([{
             "name": "flag",

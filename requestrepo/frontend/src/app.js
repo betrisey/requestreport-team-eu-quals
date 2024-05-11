@@ -494,14 +494,6 @@ class App extends Component {
                         style={{ marginRight: ".25em" }}
                       />
                     </a>
-                    <a href="#/dns-settings">
-                      <Button
-                        href="#/dns-settings"
-                        label="DNS"
-                        icon="pi pi-home"
-                        className="p-button-text p-button-secondary"
-                      />
-                    </a>
                   </div>
                 }
                 right={
@@ -510,7 +502,7 @@ class App extends Component {
                       type="text"
                       placeholder="Your URL"
                       value={this.state.user.url}
-                      style={{ width: "500px", marginRight: "1em" }}
+                      style={{ width: "550px", marginRight: "1em" }}
                       ref={(urlArea) => (this.urlArea = urlArea)}
                     />
                     <Button
