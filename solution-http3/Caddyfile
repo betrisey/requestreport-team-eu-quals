@@ -1,0 +1,6 @@
+*.traefik.me {
+  tls internal {
+    get_certificate http https://traefik.me/caddy.pem
+  }
+  reverse_proxy solver:80
+}

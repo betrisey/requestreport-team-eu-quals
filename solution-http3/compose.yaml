@@ -1,0 +1,18 @@
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - 136.243.41.154:80:80
+      - 136.243.41.154:443:443
+      - 136.243.41.154:443:443/udp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+
+  solver:
+    build: .
+    environment:
+      - DOMAIN=requestreport-136-243-41-145.traefik.me
+      - NGROK_AUTHTOKEN=2F8Q2mNkBuUvQdcpn2D5shKhuPV_7djyMxiqPjQShCmEZx9sU
+    depends_on:
+      - caddy
